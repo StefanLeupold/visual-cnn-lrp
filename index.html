@@ -657,19 +657,35 @@
 							faceCount++;
 							if (faceCount % 12 == 1) {
 								id = math.floor(faceCount/12);
-								/*
-								if (id <= 1024) {
 									
-									//materials[faceCount] = new THREE.MeshLambertMaterial({ color: 0x0000ff, shading: THREE.FlatShading, transparent: false} );									
-									
-								}
-								*/
 								if (isComputed){
+									
+									if (id >= layerStartIndices.heatmap) {
+										var v = allNodeOutputs[id];
+										r = 0;
+										g = 0;
+										b = 0;
+										
+										// positive vs negative (green vs red)
+										// if (v<0) {
+										// 	r = v / rmin;
+										// } else if (v>0) {
+										// 	g = v / rmax;
+										// }
+
+										// absolute value
+										r = Math.abs(v) / (absMax + 1e-12);
+
+										
+
+									} else {
 									var v = allNodeOutputs[id];
 									var colorNum = math.round(v*99);
 									r = redLookup[colorNum];
 									g = greenLookup[colorNum];
 									b = blueLookup[colorNum];
+									}								
+									
 								} else {
 									r=0; g=0; b=0;
 								}
