@@ -198,23 +198,29 @@ function getNNOutput() {
 	input32 = reshapeAndPadArray(input); // this is how matlab likes it.
 	input32transpose = reshapeArray(input32); // this is how java likes it.
 	
+	// Set Input image pixel values
 	for (i=0; i<nPixels; i++) {
 		allNodeInputs[i] = input32transpose[i];
 		allNodeOutputs[i] = input32transpose[i];
+		allNodeOutputs[layerStartIndices.heatmap + i] = input32transpose[i];
 		allNodeNums[i] = i+1;
 	}
 		
 	var image = reshapeToMat(input32);
+	var inputImage = reshapeToMat(input32);
 	
 	var convLayer = 0;
 	var inputImageSize = 32;
 	
 	var halfFilter = math.floor(filterSize_1/2);
-	var count = nPixels;
+	var count = nPixels; // count is now on beginning of first convolutional layer pixels
 	
+	// Convolution layer 1
 	var featMapArray_1 = [];
-	var outputImageSize = inputImageSize - halfFilter;
+	var outputImageSize = inputImageSize - halfFilter; // == 30 (should be of size 28, but only 28 are filled)
+	var convolution1_activations = [];
 	for (f=0; f<nConvFilters_1; f++) {
+		convolution1_activations[f] = Create2DArray(inputImageSize-filterSize_1+1, inputImageSize-filterSize_1+1);
 		var outputImage = Create2DArray(outputImageSize,outputImageSize);
 		featMapArray_1[f] = Create2DArray(outputImageSize,outputImageSize);
 		for (i=halfFilter; i<inputImageSize-halfFilter; i++) {
@@ -226,6 +232,7 @@ function getNNOutput() {
 					}
 				}				
 				var convOut = outputImage[i][j];
+				convolution1_activations[f][i-halfFilter][j-halfFilter] = convOut;
 				featMapArray_1[f][i][j] = sigma(convOut + conv_biases_1.e(f+1));
 				allNodeInputs[count] = convOut;
 				allNodeOutputs[count] = sigma(convOut + conv_biases_1.e(f+1));
@@ -237,6 +244,7 @@ function getNNOutput() {
 	}
 	//console.log('got count = ' + count); // 1024 + 28*28*6 = 5728	
 	
+	// Downsampling layer 1
 	var downMapSize = (outputImageSize-halfFilter)/2;
 	var downMaps_1 = [];
 	for (f=0; f<nConvFilters_1; f++) {
@@ -252,14 +260,17 @@ function getNNOutput() {
 			}
 		}
 	}
-	//console.log('got count = ' + count); // 1024 + 28*28*6 + 14*14*6 = 6904
+	// console.log('got count = ' + count); // 1024 + 28*28*6 + 14*14*6 = 6904
 	
+	// Convolution layer 2
 	var featMapArray_2 = [];
 	convLayer = 1;
 	halfFilter = math.floor(filterSize_2/2);
 	inputImageSize = downMapSize;
-	outputImageSize = inputImageSize - halfFilter;
+	outputImageSize = inputImageSize - halfFilter; // == 12 (though should be 10)
+	var convolution2_activations = [];
 	for (f=0; f<nConvFilters_2; f++) {
+		convolution2_activations[f] = Create2DArray(downMapSize-filterSize_2+1, downMapSize-filterSize_2+1);
 		var outputImage = Create2DArray(outputImageSize,outputImageSize);
 		featMapArray_2[f] = Create2DArray(outputImageSize,outputImageSize);
 		for (i=halfFilter; i<inputImageSize-halfFilter; i++) {
@@ -267,7 +278,7 @@ function getNNOutput() {
 				var convOut = 0;
 				var keeperCount = 0;
 				for (k=0; k<nConvFilters_1; k++) {
-					if (keepers.e(k+1,f+1)){
+					if (keepers.e(k+1,f+1)){ // wenn verbunden mit DownSamplingLayer1, dann..
 						image = downMaps_1[k];
 						outputImage[i][j] = 0;
 						for (m=-halfFilter; m<=halfFilter; m++) {
@@ -279,6 +290,7 @@ function getNNOutput() {
 						keeperCount++;
 					}
 				}
+				convolution2_activations[f][i-halfFilter][j-halfFilter] = convOut;
 				featMapArray_2[f][i][j] = sigma(convOut + conv_biases_2.e(f+1));
 				allNodeInputs[count] = convOut;
 				allNodeOutputs[count] = sigma(convOut + conv_biases_2.e(f+1));
@@ -288,8 +300,9 @@ function getNNOutput() {
 			}
 		}
 	}
-	//console.log('got count = ' + count); // 1024 + 28*28*6 + 14*14*6 + 10*10*16 = 8504
+	// console.log('got count = ' + count); // 1024 + 28*28*6 + 14*14*6 + 10*10*16 = 8504
 	
+	// Downsampling layer 2
 	downMapSize = (outputImageSize-halfFilter)/2;
 	downMaps_2 = [];
 	var inputArray = [];
@@ -307,7 +320,8 @@ function getNNOutput() {
 			}
 		}
 	}
-	//console.log('got count = ' + count); // 1024 + 28*28*6 + 14*14*6 + 10*10*16 + 5*5*16 = 8904
+	// console.log('got count = ' + count); // 1024 + 28*28*6 + 14*14*6 + 10*10*16 + 5*5*16 = 8904
+	
 	var fcCountStart = count;
 	var inp = Vector.create(inputArray);
 	
@@ -317,6 +331,7 @@ function getNNOutput() {
 	var hidden_outputs_2a = new Array(nHiddenNodes_2);
 	var final_outputsa = new Array(nFinalNodes);
 	
+	// DenseLayer 1
 	for (i=1; i<=nHiddenNodes_1; i++){
 	  if (!allZeroes){
 		  var weights = hidden_weights_1.row(i);		  
@@ -334,6 +349,7 @@ function getNNOutput() {
 	}
 	hidden_outputs_1.setElements(hidden_outputs_1a);
 	
+	// DenseLayer 2
 	for (i=1; i<=nHiddenNodes_2; i++){
 	  if (!allZeroes){
 		  var weights = hidden_weights_2.row(i);				  
@@ -352,6 +368,7 @@ function getNNOutput() {
 	}
 	hidden_outputs_2.setElements(hidden_outputs_2a);
 	
+	// OutputLayer
 	var sums = final_weights.x(hidden_outputs_2);
 	var newSums = sums.add(final_biases);
 	
@@ -384,6 +401,22 @@ function getNNOutput() {
 	}
 	
 	isComputed = true;
+
+	var forwardPassOutputs = {
+		inputLayer:				inputImage,
+		convLayer1: 			featMapArray_1,
+		convLayer1_activations: convolution1_activations,
+		downsamplingLayer1: 	downMaps_1,
+		convLayer2: 			featMapArray_2,
+		convLayer2_activations: convolution2_activations, // 16x10x10 (before sigmoid is applied)
+		downsamplingLayer2: 	downMaps_2,			// 16x6x6 (but only 16x5x5 filled)
+		downsamplingLayer2_flat: inp,				// 400
+		hidden1: 				hidden_outputs_1,	// 120
+		hidden2: 				hidden_outputs_2,
+		output: 				newSums
+	};
+
+	computeHeatmap(forwardPassOutputs);
 
 	updateCubes();
 	updateEdges();
