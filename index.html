@@ -701,14 +701,14 @@
 										b = 0;
 										
 										// positive vs negative (green vs red)
-										// if (v<0) {
-										// 	r = v / rmin;
-										// } else if (v>0) {
-										// 	g = v / rmax;
-										// }
+										if (v<0) {
+											r = v / rmin;
+										} else if (v>0) {
+											g = v / rmax;
+										}
 
 										// absolute value
-										r = Math.abs(v) / (absMax + 1e-12);
+										// r = Math.abs(v) / (absMax + 1e-12);
 
 										
 
