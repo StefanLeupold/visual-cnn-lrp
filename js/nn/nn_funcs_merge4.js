@@ -416,7 +416,13 @@ function getNNOutput() {
 		output: 				newSums
 	};
 
-	computeHeatmap(forwardPassOutputs);
+	if (!allZeroes) {
+		computeHeatmap(forwardPassOutputs);
+	} else {
+		for (i=0; i<=nPixels; i++) {
+			allNodeOutputs[layerStartIndices.heatmap+i] = 0;
+		}
+	}
 
 	updateCubes();
 	updateEdges();
