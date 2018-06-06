@@ -4,3 +4,6 @@
 
 This repository contains the flat convolutional neural network with an additional layerwise relevance propagation heatmap as introduced in
 S Bach, A Binder, G Montavon, F Klauschen, KR Müller, W Samek: [On Pixel-wise Explanations for Non-Linear Classifier Decisions by Layer-wise Relevance Propagation](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0130140)
+
+
+This work was supported by BMBF ALICE II grant 01IB15001B.
