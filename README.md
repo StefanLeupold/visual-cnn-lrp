@@ -3,7 +3,7 @@
 Try it: [stefanleupold.github.io/visual-cnn-lrp](https://stefanleupold.github.io/visual-cnn-lrp/) (works best in Chrome/Safari)
 
 ## Description
-This repository contains a pretrained convolutional neural network that detects characters 0 to 9. After prediction a layerwise relevance propagation heatmap is computed and displayed next to the input image.
+This repository contains a pretrained convolutional neural network in client-side JavaScript that detects characters 0 to 9. After prediction a layerwise relevance propagation heatmap is computed and displayed next to the input image. 
 
 ![alt text](https://github.com/StefanLeupold/visual-cnn-lrp/raw/master/Screenshot.jpg "")
 
