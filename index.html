@@ -665,7 +665,10 @@
 			function updateCubes() {
 				var r, g, b, i, id;
 				var numChildren = scene.children.length;
-				var absMax = Math.max(Math.abs(rmin), Math.abs(rmax));
+				var absMax;
+				if (typeof rmin !== 'undefined' && typeof rmax !== 'undefined') {
+				    absMax = Math.max(Math.abs(rmin), Math.abs(rmax));
+				}
 
 				for ( i = 0; i<numChildren; i++) {
 					if ( scene.children[i].name == 'cubes' ){
